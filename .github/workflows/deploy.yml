@@ -44,8 +44,14 @@ jobs:
         run: terraform -chdir=terraform fmt -check
 
       - name: Terraform Validate
-        run: terraform -chdir=terraform validate
+        run:  |
+              terraform -chdir=terraform validate
 
+      - name: Terraform Plan
+        run: |
+          terraform -chdir=terraform plan \
+            -var="environment=${{ github.base_ref }}"
+            
       - name: Validate PR
         run: |
           echo "Running validation before merge..."
@@ -77,4 +83,7 @@ jobs:
         run: terraform -chdir=terraform init
 
       - name: Terraform Apply
-        run: terraform -chdir=terraform apply -auto-approve
+        run: |
+            terraform -chdir=terraform apply \
+              -var="environment=${{ github.ref_name }}" \
+              -auto-approve
