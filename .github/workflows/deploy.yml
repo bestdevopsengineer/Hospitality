@@ -42,6 +42,13 @@ jobs:
 
       - name: Terraform Validate
         run: terraform -chdir=terraform/components/${{ env.COMPONENT }} validate
+      
+      - name: Terraform Security Scan
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: terraform/components/s3
+          framework: terraform
+          skip_check: CKV2_AWS_62,CKV_AWS_18,CKV_AWS_144
 
       - name: Terraform Plan
         run: |
