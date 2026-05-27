@@ -22,6 +22,8 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
 
+    environment: ${{ github.base_ref }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
