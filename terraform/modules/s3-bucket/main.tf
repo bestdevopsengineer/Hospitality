@@ -25,3 +25,13 @@ resource "aws_s3_bucket_versioning" "this" {
     status = "Enabled"
   }
 }
+# Ensure S3 buckets are encrypted with KMS by default
+resource "aws_s3_bucket_server_side_encryption_configuration" "this" {
+  bucket = aws_s3_bucket.this.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "aws:kms"
+    }
+  }
+}
