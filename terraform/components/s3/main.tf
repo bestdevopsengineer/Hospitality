@@ -1,7 +1,7 @@
 module "data_bucket" {
   source = "../../modules/s3-bucket"
 
-  bucket_name = "luxury-data-platform-dev-12345"
+  bucket_name = "luxury-data-platform-${var.environment}-12345"
   environment = var.environment
 }
 
