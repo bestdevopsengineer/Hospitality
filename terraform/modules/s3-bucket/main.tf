@@ -35,3 +35,25 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "this" {
     }
   }
 }
+
+# lifecycle rule automatically manages old objects inside the bucket.
+# Without lifecycle rules:
+#S3 storage grows forever
+#costs increase
+#old unused files remain
+#This rule says:
+#delete objects older than 365 days
+resource "aws_s3_bucket_lifecycle_configuration" "this" {
+  bucket = aws_s3_bucket.this.id
+
+  rule {
+    id     = "expire-old-objects"
+    status = "Enabled"
+
+    filter {}
+
+    expiration {
+      days = 365
+    }
+  }
+}
