@@ -2,26 +2,23 @@ name: Deploy by Branch
 
 on:
   pull_request:
-    branches:
-      - dev
-      - stage
-      - prod
+    branches: [dev, stage, prod]
 
   push:
-    branches:
-      - dev
-      - stage
-      - prod
+    branches: [dev, stage, prod]
 
 permissions:
   id-token: write
   contents: read
 
+env:
+  COMPONENT: s3
+  AWS_REGION: us-east-1
+
 jobs:
   validate:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-
     environment: ${{ github.base_ref }}
 
     steps:
@@ -32,36 +29,28 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: us-east-1
-      
+          aws-region: ${{ env.AWS_REGION }}
+
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
       - name: Terraform Init
-        run: terraform -chdir=terraform init
+        run: terraform -chdir=terraform/components/${{ env.COMPONENT }} init
 
       - name: Terraform Format Check
-        run: terraform -chdir=terraform fmt -check
+        run: terraform -chdir=terraform/components/${{ env.COMPONENT }} fmt -check
 
       - name: Terraform Validate
-        run:  |
-              terraform -chdir=terraform validate
+        run: terraform -chdir=terraform/components/${{ env.COMPONENT }} validate
 
       - name: Terraform Plan
         run: |
-          terraform -chdir=terraform plan \
+          terraform -chdir=terraform/components/${{ env.COMPONENT }} plan \
             -var="environment=${{ github.base_ref }}"
-            
-      - name: Validate PR
-        run: |
-          echo "Running validation before merge..."
-          echo "PR target branch: ${{ github.base_ref }}"
-          echo "Source branch: ${{ github.head_ref }}"
 
   deploy:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
-
     environment: ${{ github.ref_name }}
 
     steps:
@@ -72,18 +61,19 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: us-east-1
+          aws-region: ${{ env.AWS_REGION }}
 
+      - name: Confirm AWS account
+        run: aws sts get-caller-identity
 
-      
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
       - name: Terraform Init
-        run: terraform -chdir=terraform init
+        run: terraform -chdir=terraform/components/${{ env.COMPONENT }} init
 
       - name: Terraform Apply
         run: |
-            terraform -chdir=terraform apply \
-              -var="environment=${{ github.ref_name }}" \
-              -auto-approve
+          terraform -chdir=terraform/components/${{ env.COMPONENT }} apply \
+            -var="environment=${{ github.ref_name }}" \
+            -auto-approve
