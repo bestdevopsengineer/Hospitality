@@ -1,6 +1,12 @@
 name: Deploy by Branch
 
 on:
+  pull_request:
+    branches:
+      - dev
+      - stage
+      - prod
+
   push:
     branches:
       - dev
@@ -12,7 +18,22 @@ permissions:
   contents: read
 
 jobs:
+  validate:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate PR
+        run: |
+          echo "Running validation before merge..."
+          echo "PR target branch: ${{ github.base_ref }}"
+          echo "Source branch: ${{ github.head_ref }}"
+
   deploy:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
 
     environment: ${{ github.ref_name }}
