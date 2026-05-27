@@ -54,3 +54,9 @@ Your next maturity levels would be:
 8. Drift detection
 9. Security scanning (Checkov/tfsec)
 10. Terraform plan comments on PRs
+
+# create a DynamoDB table manually in AWS:
+Table name: hospitality-terraform-locks
+Partition key: LockID
+Type: String
+# 
