@@ -58,5 +58,5 @@ Your next maturity levels would be:
 # create a DynamoDB table manually in AWS:
 Table name: hospitality-terraform-locks
 Partition key: LockID
-Type: String
+Type: String nbnbnbnbnb
 # 
