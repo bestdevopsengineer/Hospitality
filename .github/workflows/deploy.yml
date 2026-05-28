@@ -54,24 +54,24 @@ jobs:
         uses: hashicorp/setup-terraform@v3
 
       - name: Terraform Init
-        run: terraform -chdir=terraform/components/${{ env.COMPONENT }} init
+        run: terraform -chdir=terraform/components/${{ matrix.component }} init
 
       - name: Terraform Format Check
-        run: terraform -chdir=terraform/components/${{ env.COMPONENT }} fmt -check
+        run: terraform -chdir=terraform/components/${{ matrix.component }} fmt -check
 
       - name: Terraform Validate
-        run: terraform -chdir=terraform/components/${{ env.COMPONENT }} validate
+        run: terraform -chdir=terraform/components/${{ matrix.component }} validate
       
       - name: Terraform Security Scan
         uses: bridgecrewio/checkov-action@v12
         with:
-          directory: terraform/components/${{ env.COMPONENT }}
+          directory: terraform/components/${{ matrix.component }}
           framework: terraform
           skip_check: CKV2_AWS_62,CKV_AWS_18,CKV_AWS_144
 
       - name: Terraform Plan
         run: |
-          terraform -chdir=terraform/components/${{ env.COMPONENT }} plan \
+          terraform -chdir=terraform/components/${{ matrix.component }} plan \
             -var="environment=${{ github.base_ref }}"
 
   deploy:
