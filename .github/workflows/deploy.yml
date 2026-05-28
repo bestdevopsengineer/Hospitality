@@ -40,6 +40,10 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ github.base_ref }}
 
+    strategy:
+      matrix:
+        component: [s3, networking]
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
