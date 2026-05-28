@@ -7,6 +7,26 @@ on:
   push:
     branches: [dev, stage, prod]
 
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to run against"
+        type: choice
+        required: true
+        options: [dev, stage, prod]
+
+      component:
+        description: "Terraform component"
+        type: choice
+        required: true
+        options: [s3, networking]
+
+      action:
+        description: "Terraform action"
+        type: choice
+        required: true
+        options: [plan, apply, destroy]
+
 permissions:
   id-token: write
   contents: read
@@ -46,7 +66,7 @@ jobs:
       - name: Terraform Security Scan
         uses: bridgecrewio/checkov-action@v12
         with:
-          directory: terraform/components/s3
+          directory: terraform/components/${{ env.COMPONENT }}
           framework: terraform
           skip_check: CKV2_AWS_62,CKV_AWS_18,CKV_AWS_144
 
@@ -83,4 +103,48 @@ jobs:
         run: |
           terraform -chdir=terraform/components/${{ env.COMPONENT }} apply \
             -var="environment=${{ github.ref_name }}" \
+            -auto-approve
+
+  manual:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials using OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Confirm AWS account
+        run: aws sts get-caller-identity
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        run: terraform -chdir=terraform/components/${{ inputs.component }} init
+
+      - name: Terraform Plan
+        if: inputs.action == 'plan'
+        run: |
+          terraform -chdir=terraform/components/${{ inputs.component }} plan \
+            -var="environment=${{ inputs.environment }}"
+
+      - name: Terraform Apply
+        if: inputs.action == 'apply'
+        run: |
+          terraform -chdir=terraform/components/${{ inputs.component }} apply \
+            -var="environment=${{ inputs.environment }}" \
+            -auto-approve
+
+      - name: Terraform Destroy
+        if: inputs.action == 'destroy'
+        run: |
+          terraform -chdir=terraform/components/${{ inputs.component }} destroy \
+            -var="environment=${{ inputs.environment }}" \
             -auto-approve
