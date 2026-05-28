@@ -1,11 +1,6 @@
 name: Deploy by Branch
 
 on:
-  pull_request:
-    branches: [dev, stage, prod]
-
-  push:
-    branches: [dev, stage, prod]
 
   workflow_dispatch:
     inputs:
@@ -26,6 +21,14 @@ on:
         type: choice
         required: true
         options: [plan, apply, destroy]
+
+  pull_request:
+    branches: [dev, stage, prod]
+
+  push:
+    branches: [dev, stage, prod]
+
+
 
 permissions:
   id-token: write
