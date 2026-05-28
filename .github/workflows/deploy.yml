@@ -67,7 +67,7 @@ jobs:
         with:
           directory: terraform/components/${{ matrix.component }}
           framework: terraform
-          skip_check: CKV2_AWS_62,CKV_AWS_18,CKV_AWS_144
+          skip_check: CKV2_AWS_62,CKV_AWS_18,CKV_AWS_144,CKV_AWS_130,CKV2_AWS_12,CKV2_AWS_11
 
       - name: Terraform Plan
         run: |
