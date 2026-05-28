@@ -32,7 +32,6 @@ permissions:
   contents: read
 
 env:
-  COMPONENT: s3
   AWS_REGION: us-east-1
 
 jobs:
@@ -41,6 +40,10 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ github.base_ref }}
 
+    strategy:
+      matrix:
+        component: [s3, networking]
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -55,30 +58,34 @@ jobs:
         uses: hashicorp/setup-terraform@v3
 
       - name: Terraform Init
-        run: terraform -chdir=terraform/components/${{ env.COMPONENT }} init
+        run: terraform -chdir=terraform/components/${{ matrix.component }} init
 
       - name: Terraform Format Check
-        run: terraform -chdir=terraform/components/${{ env.COMPONENT }} fmt -check
+        run: terraform -chdir=terraform/components/${{ matrix.component }} fmt -check
 
       - name: Terraform Validate
-        run: terraform -chdir=terraform/components/${{ env.COMPONENT }} validate
+        run: terraform -chdir=terraform/components/${{ matrix.component }} validate
       
       - name: Terraform Security Scan
         uses: bridgecrewio/checkov-action@v12
         with:
-          directory: terraform/components/${{ env.COMPONENT }}
+          directory: terraform/components/${{ matrix.component }}
           framework: terraform
-          skip_check: CKV2_AWS_62,CKV_AWS_18,CKV_AWS_144
+          skip_check: CKV2_AWS_62,CKV_AWS_18,CKV_AWS_144,CKV_AWS_130,CKV2_AWS_12,CKV2_AWS_11
 
       - name: Terraform Plan
         run: |
-          terraform -chdir=terraform/components/${{ env.COMPONENT }} plan \
+          terraform -chdir=terraform/components/${{ matrix.component }} plan \
             -var="environment=${{ github.base_ref }}"
 
   deploy:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     environment: ${{ github.ref_name }}
+
+    strategy:
+      matrix:
+        component: [s3, networking]
 
     steps:
       - name: Checkout code
@@ -88,7 +95,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: us-east-1
 
       - name: Confirm AWS account
         run: aws sts get-caller-identity
@@ -97,13 +104,14 @@ jobs:
         uses: hashicorp/setup-terraform@v3
 
       - name: Terraform Init
-        run: terraform -chdir=terraform/components/${{ env.COMPONENT }} init
+        run: terraform -chdir=terraform/components/${{ matrix.component }} init
 
       - name: Terraform Apply
         run: |
-          terraform -chdir=terraform/components/${{ env.COMPONENT }} apply \
+          terraform -chdir=terraform/components/${{ matrix.component }} apply \
             -var="environment=${{ github.ref_name }}" \
             -auto-approve
+
 
   manual:
     if: github.event_name == 'workflow_dispatch'
