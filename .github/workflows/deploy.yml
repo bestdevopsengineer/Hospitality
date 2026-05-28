@@ -159,3 +159,5 @@ jobs:
           terraform -chdir=terraform/components/${{ inputs.component }} destroy \
             -var="environment=${{ inputs.environment }}" \
             -auto-approve
+
+            
