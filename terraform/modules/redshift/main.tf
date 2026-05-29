@@ -1,20 +1,10 @@
-variable "environment" {
-  description = "Deployment environment"
-  type        = string
-}
+resource "aws_redshift_subnet_group" "this" {
+  name       = "${var.environment}-redshift-subnet-group"
+  subnet_ids = var.subnet_ids
 
-variable "project_name" {
-  description = "Project name"
-  type        = string
-  default     = "hospitality-data-platform"
-}
-
-variable "subnet_ids" {
-  description = "Private subnet IDs for Redshift"
-  type        = list(string)
-}
-
-variable "vpc_id" {
-  description = "VPC ID"
-  type        = string
+  tags = {
+    Name        = "${var.environment}-redshift-subnet-group"
+    Environment = var.environment
+    Project     = var.project_name
+  }
 }
