@@ -42,7 +42,7 @@ jobs:
 
     strategy:
       matrix:
-        component: [s3, networking]
+        component: [s3, networking , redshift]
 
     steps:
       - name: Checkout code
@@ -85,7 +85,7 @@ jobs:
 
     strategy:
       matrix:
-        component: [s3, networking]
+        component: [s3, networking, redshift]
 
     steps:
       - name: Checkout code
