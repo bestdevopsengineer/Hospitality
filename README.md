@@ -60,3 +60,10 @@ Table name: hospitality-terraform-locks
 Partition key: LockID
 Type: String
 # 
+
+
+choco --version
+2.5.0
+choco install postgresql --yes
+
+psql --version
