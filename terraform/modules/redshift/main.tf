@@ -17,7 +17,7 @@ resource "aws_redshift_cluster" "this" {
   master_username = "adminuser"
   master_password = var.master_password
 
-  node_type    = "dc2.large"
+  node_type    = "ra3.xlplus"
   cluster_type = "single-node"
 
   cluster_subnet_group_name = aws_redshift_subnet_group.this.name
