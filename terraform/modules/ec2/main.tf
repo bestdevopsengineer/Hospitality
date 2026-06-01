@@ -9,9 +9,11 @@ data "aws_ami" "amazon_linux" {
 }
 
 resource "aws_instance" "jump_server" {
-  ami           = data.aws_ami.amazon_linux.id
-  instance_type = var.instance_type
-  subnet_id     = var.subnet_id
+  ami                  = data.aws_ami.amazon_linux.id
+  instance_type        = var.instance_type
+  subnet_id            = var.subnet_id
+  iam_instance_profile = aws_iam_instance_profile.ssm.name
+
 
   tags = {
     Name        = "${var.environment}-jump-server"
