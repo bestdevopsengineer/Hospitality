@@ -110,6 +110,7 @@ jobs:
         run: |
           terraform -chdir=terraform/components/${{ matrix.component }} apply \
             -var="environment=${{ github.ref_name }}" \
+            -var="master_password=${{ secrets.REDSHIFT_MASTER_PASSWORD }}" \
             -auto-approve
 
 
@@ -141,7 +142,8 @@ jobs:
         if: inputs.action == 'plan'
         run: |
           terraform -chdir=terraform/components/${{ inputs.component }} plan \
-            -var="environment=${{ inputs.environment }}"
+            -var="environment=${{ inputs.environment }}" \
+            -var="master_password=${{ secrets.REDSHIFT_MASTER_PASSWORD }}" \
 
       - name: Terraform Apply
         if: inputs.action == 'apply'
