@@ -12,6 +12,7 @@ resource "aws_security_group" "redshift" {
 
 resource "aws_vpc_security_group_ingress_rule" "redshift" {
   security_group_id = aws_security_group.redshift.id
+  description       = "Allow Redshift traffic from inside VPC"
 
   from_port   = 5439
   to_port     = 5439
