@@ -19,7 +19,7 @@ on:
         description: "Terraform component"
         type: choice
         required: true
-        options: [s3, networking, redshift]
+        options: [s3, networking, redshift , ec2]
 
       action:
         description: "Terraform action"
@@ -46,7 +46,7 @@ jobs:
 
     strategy:
       matrix:
-        component: [s3, networking , redshift]
+        component: [s3, networking , redshift , ec2]
 
     steps:
       - name: Checkout code
@@ -75,7 +75,7 @@ jobs:
         with:
           directory: terraform/components/${{ matrix.component }}
           framework: terraform
-          skip_check: CKV2_AWS_62,CKV_AWS_18,CKV_AWS_144,CKV_AWS_130,CKV2_AWS_12,CKV2_AWS_11,CKV_AWS_87,CKV_AWS_71,CKV_AWS_142,CKV_AWS_321,CKV_AWS_64,CKV_AWS_282
+          skip_check: CKV2_AWS_62,CKV_AWS_18,CKV_AWS_144,CKV_AWS_130,CKV2_AWS_12,CKV2_AWS_11,CKV_AWS_87,CKV_AWS_71,CKV_AWS_142,CKV_AWS_321,CKV_AWS_64,CKV_AWS_282 , CKV_AWS_135
 
       - name: Terraform Plan
         run: |

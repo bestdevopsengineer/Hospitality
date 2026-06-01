@@ -14,6 +14,15 @@ resource "aws_instance" "jump_server" {
   subnet_id            = var.subnet_id
   iam_instance_profile = aws_iam_instance_profile.ssm.name
 
+  monitoring = true
+
+  metadata_options {
+    http_tokens = "required"
+  }
+
+  root_block_device {
+    encrypted = true
+  }
 
   tags = {
     Name        = "${var.environment}-jump-server"
