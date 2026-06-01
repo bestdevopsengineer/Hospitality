@@ -19,7 +19,7 @@ on:
         description: "Terraform component"
         type: choice
         required: true
-        options: [s3, networking]
+        options: [s3, networking,redshift]
 
       action:
         description: "Terraform action"
@@ -75,8 +75,14 @@ jobs:
 
       - name: Terraform Plan
         run: |
-          terraform -chdir=terraform/components/${{ matrix.component }} plan \
-            -var="environment=${{ github.base_ref }}"
+          if [ "${{ matrix.component }}" = "redshift" ]; then
+            terraform -chdir=terraform/components/${{ matrix.component }} plan \
+              -var="environment=${{ github.base_ref }}" \
+              -var="master_password=${{ secrets.REDSHIFT_MASTER_PASSWORD }}"
+          else
+            terraform -chdir=terraform/components/${{ matrix.component }} plan \
+              -var="environment=${{ github.base_ref }}"
+          fi
 
   deploy:
     if: github.event_name == 'push'
@@ -107,11 +113,18 @@ jobs:
         run: terraform -chdir=terraform/components/${{ matrix.component }} init
 
       - name: Terraform Apply
+        if: inputs.action == 'apply'
         run: |
-          terraform -chdir=terraform/components/${{ matrix.component }} apply \
-            -var="environment=${{ github.ref_name }}" \
-            -var="master_password=${{ secrets.REDSHIFT_MASTER_PASSWORD }}" \
-            -auto-approve
+          if [ "${{ inputs.component }}" = "redshift" ]; then
+            terraform -chdir=terraform/components/${{ inputs.component }} apply \
+              -var="environment=${{ inputs.environment }}" \
+              -var="master_password=${{ secrets.REDSHIFT_MASTER_PASSWORD }}" \
+              -auto-approve
+          else
+            terraform -chdir=terraform/components/${{ inputs.component }} apply \
+              -var="environment=${{ inputs.environment }}" \
+              -auto-approve
+          fi
 
 
   manual:
