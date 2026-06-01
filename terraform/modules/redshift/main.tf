@@ -22,5 +22,9 @@ resource "aws_redshift_cluster" "this" {
 
   cluster_subnet_group_name = aws_redshift_subnet_group.this.name
 
+  publicly_accessible  = false
+  encrypted            = true
+  enhanced_vpc_routing = true
+
   skip_final_snapshot = true
 }
