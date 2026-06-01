@@ -11,7 +11,8 @@ data "terraform_remote_state" "networking" {
 module "redshift" {
   source = "../../modules/redshift"
 
-  environment = var.environment
-  vpc_id      = data.terraform_remote_state.networking.outputs.vpc_id
-  subnet_ids  = data.terraform_remote_state.networking.outputs.private_subnet_ids
+  environment     = var.environment
+  vpc_id          = data.terraform_remote_state.networking.outputs.vpc_id
+  subnet_ids      = data.terraform_remote_state.networking.outputs.private_subnet_ids
+  master_password = var.master_password
 }

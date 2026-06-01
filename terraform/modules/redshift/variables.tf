@@ -18,3 +18,9 @@ variable "vpc_id" {
   description = "VPC ID"
   type        = string
 }
+
+variable "master_password" {
+  description = "Redshift master password"
+  type        = string
+  sensitive   = true
+}

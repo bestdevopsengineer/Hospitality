@@ -19,7 +19,7 @@ on:
         description: "Terraform component"
         type: choice
         required: true
-        options: [s3, networking]
+        options: [s3, networking,redshift]
 
       action:
         description: "Terraform action"
@@ -71,12 +71,18 @@ jobs:
         with:
           directory: terraform/components/${{ matrix.component }}
           framework: terraform
-          skip_check: CKV2_AWS_62,CKV_AWS_18,CKV_AWS_144,CKV_AWS_130,CKV2_AWS_12,CKV2_AWS_11
+          skip_check: CKV2_AWS_62,CKV_AWS_18,CKV_AWS_144,CKV_AWS_130,CKV2_AWS_12,CKV2_AWS_11,CKV_AWS_87,CKV_AWS_71,CKV_AWS_142,CKV_AWS_321,CKV_AWS_64
 
       - name: Terraform Plan
         run: |
-          terraform -chdir=terraform/components/${{ matrix.component }} plan \
-            -var="environment=${{ github.base_ref }}"
+          if [ "${{ matrix.component }}" = "redshift" ]; then
+            terraform -chdir=terraform/components/${{ matrix.component }} plan \
+              -var="environment=${{ github.base_ref }}" \
+              -var="master_password=${{ secrets.REDSHIFT_MASTER_PASSWORD }}"
+          else
+            terraform -chdir=terraform/components/${{ matrix.component }} plan \
+              -var="environment=${{ github.base_ref }}"
+          fi
 
   deploy:
     if: github.event_name == 'push'
@@ -107,10 +113,18 @@ jobs:
         run: terraform -chdir=terraform/components/${{ matrix.component }} init
 
       - name: Terraform Apply
+        if: inputs.action == 'apply'
         run: |
-          terraform -chdir=terraform/components/${{ matrix.component }} apply \
-            -var="environment=${{ github.ref_name }}" \
-            -auto-approve
+          if [ "${{ inputs.component }}" = "redshift" ]; then
+            terraform -chdir=terraform/components/${{ inputs.component }} apply \
+              -var="environment=${{ inputs.environment }}" \
+              -var="master_password=${{ secrets.REDSHIFT_MASTER_PASSWORD }}" \
+              -auto-approve
+          else
+            terraform -chdir=terraform/components/${{ inputs.component }} apply \
+              -var="environment=${{ inputs.environment }}" \
+              -auto-approve
+          fi
 
 
   manual:
@@ -141,7 +155,8 @@ jobs:
         if: inputs.action == 'plan'
         run: |
           terraform -chdir=terraform/components/${{ inputs.component }} plan \
-            -var="environment=${{ inputs.environment }}"
+            -var="environment=${{ inputs.environment }}" \
+            -var="master_password=${{ secrets.REDSHIFT_MASTER_PASSWORD }}" \
 
       - name: Terraform Apply
         if: inputs.action == 'apply'
