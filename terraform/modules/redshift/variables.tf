@@ -24,3 +24,13 @@ variable "master_password" {
   type        = string
   sensitive   = true
 }
+
+variable "namespace_name" {
+  type    = string
+  default = null
+}
+
+variable "workgroup_name" {
+  type    = string
+  default = null
+}
