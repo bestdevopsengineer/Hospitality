@@ -19,7 +19,7 @@ on:
         description: "Terraform component"
         type: choice
         required: true
-        options: [s3, networking,redshift]
+        options: [s3, networking, redshift]
 
       action:
         description: "Terraform action"
@@ -117,19 +117,17 @@ jobs:
         run: terraform -chdir=terraform/components/${{ matrix.component }} init
 
       - name: Terraform Apply
-        if: inputs.action == 'apply'
         run: |
-          if [ "${{ inputs.component }}" = "redshift" ]; then
-            terraform -chdir=terraform/components/${{ inputs.component }} apply \
-              -var="environment=${{ inputs.environment }}" \
+          if [ "${{ matrix.component }}" = "redshift" ]; then
+            terraform -chdir=terraform/components/${{ matrix.component }} apply \
+              -var="environment=${{ github.ref_name }}" \
               -var="master_password=${{ secrets.REDSHIFT_MASTER_PASSWORD }}" \
               -auto-approve
           else
-            terraform -chdir=terraform/components/${{ inputs.component }} apply \
-              -var="environment=${{ inputs.environment }}" \
+            terraform -chdir=terraform/components/${{ matrix.component }} apply \
+              -var="environment=${{ github.ref_name }}" \
               -auto-approve
           fi
-
 
   manual:
     if: github.event_name == 'workflow_dispatch'
@@ -165,9 +163,16 @@ jobs:
       - name: Terraform Apply
         if: inputs.action == 'apply'
         run: |
-          terraform -chdir=terraform/components/${{ inputs.component }} apply \
-            -var="environment=${{ inputs.environment }}" \
-            -auto-approve
+          if [ "${{ inputs.component }}" = "redshift" ]; then
+            terraform -chdir=terraform/components/${{ inputs.component }} apply \
+              -var="environment=${{ inputs.environment }}" \
+              -var="master_password=${{ secrets.REDSHIFT_MASTER_PASSWORD }}" \
+              -auto-approve
+          else
+            terraform -chdir=terraform/components/${{ inputs.component }} apply \
+              -var="environment=${{ inputs.environment }}" \
+              -auto-approve
+          fi
 
       - name: Terraform Destroy
         if: inputs.action == 'destroy'
