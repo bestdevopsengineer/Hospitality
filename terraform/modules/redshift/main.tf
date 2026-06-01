@@ -48,6 +48,7 @@ resource "aws_redshiftserverless_workgroup" "this" {
   namespace_name = aws_redshiftserverless_namespace.this.namespace_name
   subnet_ids     = var.subnet_ids
 
+  security_group_ids  = [aws_security_group.redshift.id]
   publicly_accessible = false
 
   tags = {

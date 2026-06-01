@@ -67,3 +67,6 @@ choco --version
 choco install postgresql --yes
 
 psql --version
+
+Namespace = database environment
+Workgroup = compute + endpoint
