@@ -86,6 +86,7 @@ $env:AWS_PROFILE="sam-user-dev"
 aws sts get-caller-identity
 aws ssm start-session --target i-03866a693e0b236b9 --region us-east-1
 
+============
 PGPASSWORD='UseSomethingStrong123!' psql \
   -h dev-hospitality-workgroup.502845302465.us-east-1.redshift-serverless.amazonaws.com \
   -p 5439 \
@@ -108,6 +109,112 @@ CSV
 IGNOREHEADER 1;
 
 SELECT * FROM salesforce_accounts;
+
+aws s3 cp salesforce_opportunities.csv \
+s3://luxury-data-platform-dev-12345/raw/salesforce/opportunities/salesforce_opportunities.csv \
+--region us-east-1
+
+aws s3 ls s3://luxury-data-platform-dev-12345/raw/salesforce/opportunities/ --region us-east-1
+
+aws ssm start-session --target i-03866a693e0b236b9 --region us-east-1
+==============
+PGPASSWORD='UseSomethingStrong123!' psql \
+  -h dev-hospitality-workgroup.502845302465.us-east-1.redshift-serverless.amazonaws.com \
+  -p 5439 \
+  -U adminuser \
+  -d hospitality
+
+CREATE TABLE salesforce_opportunities (
+    opportunity_id VARCHAR(20),
+    account_id VARCHAR(20),
+    opportunity_name VARCHAR(100),
+    stage VARCHAR(50),
+    amount DECIMAL(18,2)
+);
+
+COPY salesforce_opportunities
+FROM 's3://luxury-data-platform-dev-12345/raw/salesforce/opportunities/salesforce_opportunities.csv'
+IAM_ROLE 'arn:aws:iam::502845302465:role/dev-redshift-s3-access-role'
+CSV
+IGNOREHEADER 1;
+
+============
+So right now:
+
+Database = hospitality
+Schema = public
+Tables = hotels, salesforce_accounts, salesforce_opportunities
+
+1-
+SELECT current_database();
+
+current_database 
+--------------------------
+hospitality
+
+2-
+SELECT table_name
+FROM information_schema.tables
+WHERE table_schema = 'public';
+
+      table_name        
+--------------------------
+ hotels
+ salesforce_accounts
+ salesforce_opportunities
+
+3-
+ SELECT * FROM salesforce_accounts ;
+ account_id |    account_name     |  industry   |   city    | state | annual_revenue 
+------------+---------------------+-------------+-----------+-------+----------------
+ A001       | Luxury Grand Hotel  | Hospitality | Miami     | FL    |    25000000.00
+ A002       | Royal Beach Resort  | Hospitality | Orlando   | FL    |    18000000.00
+ A003       | Mountain View Lodge | Hospitality | Denver    | CO    |     9000000.00
+ A004       | Ocean Breeze Resort | Hospitality | San Diego | CA    |    32000000.00
+
+ 4-
+ SELECT * FROM salesforce_opportunities ;
+ opportunity_id | account_id |     opportunity_name      |    stage    |   amount   
+----------------+------------+---------------------------+-------------+------------
+ O001           | A001       | Hotel Expansion           | Closed Won  | 5000000.00
+ O002           | A002       | Beach Renovation          | Negotiation | 2500000.00
+ O003           | A001       | Luxury Suites Upgrade     | Prospecting | 1200000.00
+ O004           | A004       | Conference Center Project | Closed Won  | 8000000.00
+
+
+# Now run your first analytics query.
+# Which hotel accounts have opportunities, what stage are they in, and how much revenue is associated with them?
+SELECT
+    a.account_name,
+    o.opportunity_name,
+    o.stage,
+    o.amount
+FROM salesforce_accounts a
+JOIN salesforce_opportunities o
+    ON a.account_id = o.account_id;
+
+ account_name     |     opportunity_name      |    stage    |   amount   
+---------------------+---------------------------+-------------+------------
+ Luxury Grand Hotel  | Hotel Expansion           | Closed Won  | 5000000.00
+ Royal Beach Resort  | Beach Renovation          | Negotiation | 2500000.00
+ Luxury Grand Hotel  | Luxury Suites Upgrade     | Prospecting | 1200000.00
+ Ocean Breeze Resort | Conference Center Project | Closed Won  | 8000000.00
+
+# total opportunity revenue per hotel account.
+SELECT
+    a.account_name,
+    SUM(o.amount) AS total_pipeline
+FROM salesforce_accounts a
+JOIN salesforce_opportunities o
+    ON a.account_id = o.account_id
+GROUP BY a.account_name
+ORDER BY total_pipeline DESC;
+
+ account_name     | total_pipeline 
+---------------------+----------------
+ Ocean Breeze Resort |     8000000.00
+ Luxury Grand Hotel  |     6200000.00
+ Royal Beach Resort  |     2500000.00
 
 <Why-SSM>:
 No SSH key
@@ -200,9 +307,9 @@ s3://luxury-data-platform-dev-12345/raw/salesforce/opportunities/salesforce_oppo
 --region us-east-1
 
 
+# I automated ingestion of Salesforce exports into S3 and Redshift using AWS services and Infrastructure as Code.
 
-
-
+# Next single step
 
 =================================================================================
 A database is software.
