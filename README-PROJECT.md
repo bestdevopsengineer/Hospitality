@@ -319,8 +319,74 @@ Lambda basic logging policy attachment
 Lambda function
 
 
+aws lambda invoke \
+  --function-name dev-s3-redshift-loader \
+  --payload '{"test":"hello"}' \
+  --cli-binary-format raw-in-base64-out \
+  response.json \
+  --region us-east-1
 
+cat response.json
 
+# we want:
+salesforce_accounts.csv
+        ↓
+        S3
+        ↓
+   S3 Event
+        ↓
+     Lambda
+        ↓
+  CloudWatch Logs
+
+# allow S3 to invoke Lambda.
+
+# Before
+Create CSV
+    ↓
+Upload to S3
+    ↓
+Connect to Redshift
+    ↓
+Run COPY manually
+
+# After S3 Notification
+salesforce_accounts.csv
+          ↓
+      Upload to S3
+          ↓
+     S3 Event fires
+          ↓
+ Lambda runs automatically
+          ↓
+ Processes the file
+
+ events = ["s3:ObjectCreated:*"]
+filter_prefix = "raw/salesforce/"
+filter_suffix = ".csv"
+Whenever someone uploads: raw/salesforce/
+AWS automatically does:
+
+Real-world example
+
+A Salesforce export job runs every night:
+12:00 AM
+   ↓
+salesforce_accounts_20260602.csv
+   ↓
+S3 bucket
+   ↓
+Lambda triggered automatically
+   ↓
+Load into Redshift
+   ↓
+Morning dashboards updated
+
+This is called an event-driven architecture.
+
+aws logs describe-log-groups \
+  --log-group-name-prefix "//aws/lambda" \
+  --region us-east-1
 =================================================================================
 A database is software.
 A server is a machine that runs software.
