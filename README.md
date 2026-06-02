@@ -70,3 +70,44 @@ psql --version
 
 Namespace = database environment
 Workgroup = compute + endpoint
+
+=============================
+SELECT current_database();
+
+CREATE TABLE hotels (
+    hotel_id INT,
+    hotel_name VARCHAR(100),
+    city VARCHAR(100),
+    rooms INT
+);
+
+INSERT INTO hotels VALUES
+(1, 'Luxury Grand Hotel', 'Miami', 250),
+(2, 'Royal Beach Resort', 'Orlando', 180);
+
+SELECT * FROM hotels;
+hotel_id |     hotel_name     |  city   | rooms
+----------+--------------------+---------+-------
+1         | Luxury Grand Hotel | Miami   | 250
+2         | Royal Beach Resort | Orlando | 180
+
+
+Terraform
+   │
+   ├── S3 Backend
+   ├── VPC
+   ├── Public Subnets
+   ├── Internet Gateway
+   ├── Route Tables
+   ├── Redshift Serverless
+   └── EC2 Jump Server
+           │
+           ▼
+AWS Systems Manager
+           │
+           ▼
+Redshift Serverless
+
+# I built a cloud data platform on AWS using Terraform. 
+# I provisioned a VPC, networking components, an EC2 jump server, and Redshift Serverless. 
+# I configured remote state in S3 with DynamoDB locking, integrated deployments through GitHub Actions using OIDC authentication, secured access with IAM roles and # AWS Systems Manager instead of SSH, and validated the platform by connecting to Redshift from a private EC2 instance and creating/querying tables.

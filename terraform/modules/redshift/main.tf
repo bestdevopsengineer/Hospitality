@@ -36,6 +36,8 @@ resource "aws_redshiftserverless_namespace" "this" {
   admin_username      = "adminuser"
   admin_user_password = var.master_password
 
+  iam_roles = [aws_iam_role.redshift_s3_access.arn]
+
   tags = {
     Environment = var.environment
     Project     = var.project_name
