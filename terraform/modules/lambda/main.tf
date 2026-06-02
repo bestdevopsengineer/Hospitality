@@ -35,8 +35,38 @@ resource "aws_lambda_function" "this" {
   filename         = data.archive_file.lambda_zip.output_path
   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
 
+  environment {
+    variables = {
+      REDSHIFT_WORKGROUP = "dev-hospitality-workgroup"
+      REDSHIFT_DATABASE  = "hospitality"
+      REDSHIFT_ROLE_ARN  = "arn:aws:iam::502845302465:role/dev-redshift-s3-access-role"
+    }
+  }
+
   tags = {
     Environment = var.environment
     Project     = var.project_name
   }
+}
+
+resource "aws_iam_role_policy" "redshift_data_api" {
+  name = "${var.environment}-${var.function_name}-redshift-data-api"
+  role = aws_iam_role.lambda.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "redshift-data:ExecuteStatement",
+          "redshift-data:DescribeStatement",
+          "redshift-data:GetStatementResult",
+          "redshift-serverless:GetWorkgroup",
+          "redshift-serverless:GetNamespace"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
 }

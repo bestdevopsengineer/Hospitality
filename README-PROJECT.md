@@ -384,9 +384,12 @@ Morning dashboards updated
 
 This is called an event-driven architecture.
 
-aws logs describe-log-groups \
-  --log-group-name-prefix "//aws/lambda" \
-  --region us-east-1
+  MSYS_NO_PATHCONV=1 aws logs tail /aws/lambda/dev-s3-redshift-loader \
+  --region us-east-1 \
+  --since 30m
+
+  The log shows this file upload automatically invoked Lambda:
+raw/salesforce/accounts/test-trigger-accounts.csv
 =================================================================================
 A database is software.
 A server is a machine that runs software.
