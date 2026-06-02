@@ -1,0 +1,5 @@
+opportunity_id,account_id,opportunity_name,stage,amount
+O001,A001,Hotel Expansion,Closed Won,5000000
+O002,A002,Beach Renovation,Negotiation,2500000
+O003,A001,Luxury Suites Upgrade,Prospecting,1200000
+O004,A004,Conference Center Project,Closed Won,8000000
