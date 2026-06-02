@@ -309,7 +309,17 @@ s3://luxury-data-platform-dev-12345/raw/salesforce/opportunities/salesforce_oppo
 
 # I automated ingestion of Salesforce exports into S3 and Redshift using AWS services and Infrastructure as Code.
 
-# Next single step
+# Next single step :  Lambda
+terraform -chdir=terraform/components/lambda init
+terraform -chdir=terraform/components/lambda plan -var="environment=dev"
+terraform -chdir=terraform/components/lambda apply -var="environment=dev"
+
+Lambda IAM role
+Lambda basic logging policy attachment
+Lambda function
+
+
+
 
 =================================================================================
 A database is software.
