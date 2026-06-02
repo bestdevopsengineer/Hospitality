@@ -19,7 +19,7 @@ on:
         description: "Terraform component"
         type: choice
         required: true
-        options: [s3, networking, redshift , ec2]
+        options: [s3, networking, redshift , ec2 , lambda ]
 
       action:
         description: "Terraform action"
@@ -46,7 +46,7 @@ jobs:
 
     strategy:
       matrix:
-        component: [s3, networking , redshift , ec2]
+        component: [s3, networking , redshift , ec2 , lambda]
 
     steps:
       - name: Checkout code
