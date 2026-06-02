@@ -68,7 +68,11 @@ Detailed monitoring
 Installed plugin locally and fixed PATH.
 Checked AWS profile: 
 <bash>
+ls "/c/Program Files/Amazon/SessionManagerPlugin/bin"
+export PATH="$PATH:/c/Program Files/Amazon/SessionManagerPlugin/bin"
+
 aws configure --profile sam-user-dev
+
 aws sts get-caller-identity --profile sam-user-dev
 export AWS_PROFILE=sam-user-dev
 aws sts get-caller-identity
@@ -76,7 +80,7 @@ aws sts get-caller-identity
 terraform -chdir=terraform/components/redshift apply \
   -var="environment=dev" \
   -var="master_password=UseSomethingStrong123!"
-  
+
 <powershell> 
 $env:AWS_PROFILE="sam-user-dev"
 aws sts get-caller-identity
@@ -97,6 +101,13 @@ CREATE TABLE salesforce_accounts (
     annual_revenue DECIMAL(18,2)
 );
 
+COPY salesforce_accounts
+FROM 's3://luxury-data-platform-dev-12345/raw/salesforce/accounts/salesforce_accounts.csv'
+IAM_ROLE 'arn:aws:iam::502845302465:role/dev-redshift-s3-access-role'
+CSV
+IGNOREHEADER 1;
+
+SELECT * FROM salesforce_accounts;
 
 <Why-SSM>:
 No SSH key
@@ -183,6 +194,10 @@ A004,Ocean Breeze Resort,Hospitality,San Diego,CA,32000000
 aws s3 cp salesforce_accounts.csv s3://luxury-data-platform-dev-12345/raw/salesforce/accounts/salesforce_accounts.csv --region us-east-1
 aws s3 ls s3://luxury-data-platform-dev-12345/raw/salesforce/accounts/ --region us-east-1
 
+
+aws s3 cp salesforce_opportunities.csv \
+s3://luxury-data-platform-dev-12345/raw/salesforce/opportunities/salesforce_opportunities.csv \
+--region us-east-1
 
 
 
