@@ -48,7 +48,7 @@ def handler(event, context):
 
         # Determine target table based on file name/path
         if "accounts" in key:
-            table_name = "salesforce_accounts"
+            table_name = "staging_salesforce_accounts"
         elif "opportunities" in key:
             table_name = "salesforce_opportunities"
         else:
