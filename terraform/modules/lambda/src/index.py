@@ -47,6 +47,7 @@ def handler(event, context):
         )
 
         print(f"Statement ID: {response['Id']}")
+        statement_id = response["Id"]
 
         for _ in range(10):
             status = redshift_data.describe_statement(Id=statement_id)
