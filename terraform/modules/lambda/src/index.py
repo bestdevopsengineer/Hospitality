@@ -57,13 +57,57 @@ def handler(event, context):
             continue
         
         # Build Redshift COPY command
-        sql = f"""
-        COPY {table_name}
-        FROM '{s3_path}'
-        IAM_ROLE '{ROLE_ARN}'
-        CSV
-        IGNOREHEADER 1;
-        """
+        # sql = f"""
+        # COPY {table_name}
+        # FROM '{s3_path}'
+        # IAM_ROLE '{ROLE_ARN}'
+        # CSV
+        # IGNOREHEADER 1;
+        # """
+        if table_name == "staging_salesforce_accounts":
+            sql = f"""
+            COPY staging_salesforce_accounts
+            FROM '{s3_path}'
+            IAM_ROLE '{ROLE_ARN}'
+            CSV
+            IGNOREHEADER 1;
+
+            MERGE INTO salesforce_accounts
+            USING staging_salesforce_accounts
+            ON salesforce_accounts.account_id = staging_salesforce_accounts.account_id
+            WHEN MATCHED THEN UPDATE SET
+                account_name = staging_salesforce_accounts.account_name,
+                industry = staging_salesforce_accounts.industry,
+                city = staging_salesforce_accounts.city,
+                state = staging_salesforce_accounts.state,
+                annual_revenue = staging_salesforce_accounts.annual_revenue
+            WHEN NOT MATCHED THEN INSERT (
+                account_id,
+                account_name,
+                industry,
+                city,
+                state,
+                annual_revenue
+            )
+            VALUES (
+                staging_salesforce_accounts.account_id,
+                staging_salesforce_accounts.account_name,
+                staging_salesforce_accounts.industry,
+                staging_salesforce_accounts.city,
+                staging_salesforce_accounts.state,
+                staging_salesforce_accounts.annual_revenue
+            );
+
+            TRUNCATE TABLE staging_salesforce_accounts;
+            """
+        else:
+            sql = f"""
+            COPY {table_name}
+            FROM '{s3_path}'
+            IAM_ROLE '{ROLE_ARN}'
+            CSV
+            IGNOREHEADER 1;
+            """
 
         print(f"Executing COPY into {table_name}")
         print(sql)
