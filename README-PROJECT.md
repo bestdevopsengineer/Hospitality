@@ -28,6 +28,11 @@ FROM salesforce_accounts;
 (4 rows)
 
 
+Lambda is connecting as: IAMR:dev-s3-redshift-loader-role
+but the table was created by: adminuser
+So grant table permission to the Lambda IAM user inside Redshift.
+GRANT INSERT, SELECT ON TABLE salesforce_accounts TO "IAMR:dev-s3-redshift-loader-role";
+
 
 
 1-  I built a cloud data platform on AWS using Terraform and GitHub Actions. 
