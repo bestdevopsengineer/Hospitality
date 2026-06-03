@@ -1,3 +1,35 @@
+aws ssm start-session \
+  --target i-03866a693e0b236b9 \
+  --region us-east-1
+# sh-5.2$
+
+  PGPASSWORD='UseSomethingStrong123!' psql \
+  -h dev-hospitality-workgroup.502845302465.us-east-1.redshift-serverless.amazonaws.com \
+  -p 5439 \
+  -U adminuser \
+  -d hospitality
+# hospitality=#
+
+SELECT COUNT(*) FROM salesforce_accounts;
+#   count 
+#  -------
+#     4
+#  (1 row)
+
+SELECT *
+FROM salesforce_accounts;
+
+ account_id |    account_name     |  industry   |   city    | state | annual_revenue 
+------------+---------------------+-------------+-----------+-------+----------------
+ A001       | Luxury Grand Hotel  | Hospitality | Miami     | FL    |    25000000.00
+ A002       | Royal Beach Resort  | Hospitality | Orlando   | FL    |    18000000.00
+ A003       | Mountain View Lodge | Hospitality | Denver    | CO    |     9000000.00
+ A004       | Ocean Breeze Resort | Hospitality | San Diego | CA    |    32000000.00
+(4 rows)
+
+
+
+
 1-  I built a cloud data platform on AWS using Terraform and GitHub Actions. 
 2-  I provisioned a VPC with public and private networking, 
     deployed Redshift Serverless for analytics workloads, 

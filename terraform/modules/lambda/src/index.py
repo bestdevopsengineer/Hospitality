@@ -1,4 +1,5 @@
 import json
+import time
 import os
 import urllib.parse
 import boto3
@@ -46,6 +47,16 @@ def handler(event, context):
         )
 
         print(f"Statement ID: {response['Id']}")
+
+        for _ in range(10):
+            status = redshift_data.describe_statement(Id=statement_id)
+            print(f"Statement status: {status['Status']}")
+
+            if status["Status"] in ["FINISHED", "FAILED", "ABORTED"]:
+                print(json.dumps(status, default=str))
+                break
+
+            time.sleep(2)
 
     return {
         "statusCode": 200,
