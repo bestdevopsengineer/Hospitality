@@ -203,3 +203,40 @@ Salesforce
 # The next logical enhancement would be to add a staging (raw → staging → curated) layer with UPSERT/MERGE logic, 
 # because that's what production data engineering teams usually do instead of loading directly into final tables.
 
+Option 1:
+S3 Event Notification → Lambda
+
+Option 2:
+S3 → EventBridge → Lambda
+
+=========
+Why we used S3 Event Notification first
+Because it is simpler:
+
+S3 file uploaded
+   ↓
+Lambda runs
+
+Good for learning and quick demos.
+
+============
+Why EventBridge is better for production
+
+EventBridge gives more control:
+
+S3
+ ↓
+EventBridge Rule
+ ↓
+Lambda
+
+Benefits:
+Better routing
+Better filtering
+Easier to send event to multiple targets
+Better for enterprise event-driven architecture
+Can connect future workflows like Step Functions
+
+# For the first version, I used S3 Event Notification to trigger Lambda directly when Salesforce CSV files land in S3. 
+# In production, I would likely use EventBridge between S3 and Lambda for better event routing, filtering, retry handling, 
+# and future extensibility.
