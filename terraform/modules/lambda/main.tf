@@ -63,6 +63,7 @@ resource "aws_iam_role_policy" "redshift_data_api" {
           "redshift-data:DescribeStatement",
           "redshift-data:GetStatementResult",
           "redshift-serverless:GetWorkgroup",
+          "redshift-serverless:GetCredentials",
           "redshift-serverless:GetNamespace"
         ]
         Resource = "*"
