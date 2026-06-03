@@ -167,3 +167,166 @@ SELECT COUNT(*)
 FROM staging_salesforce_accounts;
 
 
+So the final pipeline becomes fully automated:
+Salesforce CSV
+   ↓
+S3
+   ↓
+Lambda
+   ↓
+staging table
+   ↓
+MERGE/UPSERT
+   ↓
+final table
+   ↓
+clean staging
+
+aws s3 cp salesforce_accounts.csv \
+s3://luxury-data-platform-dev-12345/raw/salesforce/accounts/full-pipeline-test.csv \
+--region us-east-1
+
+Then check logs:
+MSYS_NO_PATHCONV=1 aws logs tail /aws/lambda/dev-s3-redshift-loader \
+  --region us-east-1 \
+  --since 5m
+
+S3
+ ↓
+Lambda
+ ↓
+COPY staging
+ ↓
+MERGE final
+ ↓
+TRUNCATE staging
+ ↓
+FINISHED
+  # Next step, run this in Redshift:
+    GRANT SELECT, INSERT, UPDATE, DELETE
+    ON TABLE salesforce_accounts
+    TO "IAMR:dev-s3-redshift-loader-role";
+
+aws s3 cp salesforce_accounts.csv \
+s3://luxury-data-platform-dev-12345/raw/salesforce/accounts/full-pipeline-test-2.csv \
+--region us-east-1
+
+GRANT INSERT, SELECT, DELETE, UPDATE
+ON TABLE staging_salesforce_accounts
+TO "IAMR:dev-s3-redshift-loader-role";
+
+SELECT grantee,
+       privilege_type
+FROM information_schema.role_table_grants
+WHERE table_name = 'staging_salesforce_accounts';
+
+# Let's verify who owns the staging table.
+SELECT tablename,
+       tableowner
+FROM pg_tables
+WHERE tablename = 'staging_salesforce_accounts';
+
+aws s3 cp salesforce_accounts.csv \
+s3://luxury-data-platform-dev-12345/raw/salesforce/accounts/full-pipeline-test-4.csv \
+--region us-east-1
+
+MSYS_NO_PATHCONV=1 aws logs tail /aws/lambda/dev-s3-redshift-loader \
+  --region us-east-1 \
+  --since 5m
+
+SELECT usename
+FROM pg_user
+ORDER BY usename;
+
+GRANT ALL PRIVILEGES
+ON TABLE staging_salesforce_accounts
+TO "IAMR:dev-s3-redshift-loader-role";
+
+GRANT ALL PRIVILEGES
+ON TABLE salesforce_accounts
+TO "IAMR:dev-s3-redshift-loader-role";
+
+aws s3 cp salesforce_accounts.csv \
+s3://luxury-data-platform-dev-12345/raw/salesforce/accounts/full-pipeline-test-5.csv \
+--region us-east-1
+
+MSYS_NO_PATHCONV=1 aws logs tail /aws/lambda/dev-s3-redshift-loader \
+  --region us-east-1 \
+  --since 5m
+
+  Salesforce
+    ↓
+(EventBridge schedule or API extraction)
+    ↓
+Lambda Extract
+    ↓
+S3 Raw Bucket
+    ↓
+S3 Event Notification
+    ↓
+Lambda Loader
+    ↓
+COPY → staging_salesforce_accounts
+    ↓
+MERGE / UPSERT
+    ↓
+salesforce_accounts
+    ↓
+TRUNCATE staging
+    ↓
+Analysts query Redshift
+
+# And the AWS services involved:
+Salesforce
+EventBridge
+Lambda
+S3
+IAM
+Redshift Serverless
+Redshift Data API
+CloudWatch
+Terraform
+GitHub Actions
+
+📤 Salesforce
+      │
+      ▼
+⏰ EventBridge (schedule) 
+or  
+🔌 API Extraction
+      │
+      ▼
+🧩 Lambda Extract
+📄 Pulls data via Bulk API / REST
+      │
+      ▼
+🪣 S3 Raw Bucket (RAW Zone)
+📁 Stores untouched CSV/JSON
+      │
+      ▼
+🔔 S3 Event Notification
+Triggers next step
+      │
+      ▼
+🧩 Lambda Loader
+📝 Prepares COPY command
+      │
+      ▼
+🛢️ Redshift (Staging)
+📥 COPY → staging_salesforce_accounts
+      │
+      ▼
+🔄 MERGE / UPSERT
+Updates final table with new + changed records
+      │
+      ▼
+🛢️ Redshift (Final Table)
+📊 salesforce_accounts
+      │
+      ▼
+🧹 TRUNCATE staging
+Clean up temporary data
+      │
+      ▼
+📈 Analysts / BI Tools
+Power BI, Tableau, Looker query Redshift
