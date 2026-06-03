@@ -1,3 +1,24 @@
+Salesforce
+ ↓
+S3
+ ↓
+Lambda
+ ↓
+COPY
+ ↓
+FINISHED ? ── Yes ──► Data available in Redshift
+
+             No
+             ↓
+        CloudWatch
+             ↓
+          SNS
+             ↓
+      Email/Slack
+             ↓
+      Move file to error/
+
+
 # 1. Infrastructure Foundation (Terraform)
 You provisioned on AWS:
 VPC
@@ -200,8 +221,8 @@ Salesforce
 → SSM Access
 → Remote State + DynamoDB Locking
 
-# The next logical enhancement would be to add a staging (raw → staging → curated) layer with UPSERT/MERGE logic, 
-# because that's what production data engineering teams usually do instead of loading directly into final tables.
+The next logical enhancement would be to add a staging (raw → staging → curated) layer with UPSERT/MERGE logic, 
+because that's what production data engineering teams usually do instead of loading directly into final tables. 
 
 Option 1:
 S3 Event Notification → Lambda
@@ -240,3 +261,52 @@ Can connect future workflows like Step Functions
 # For the first version, I used S3 Event Notification to trigger Lambda directly when Salesforce CSV files land in S3. 
 # In production, I would likely use EventBridge between S3 and Lambda for better event routing, filtering, retry handling, 
 # and future extensibility.
+
+# Right now:
+
+S3 raw file
+   ↓
+Lambda COPY
+   ↓
+salesforce_accounts final table
+
+# Better production design:
+
+S3 raw file
+   ↓
+Lambda COPY
+   ↓
+staging table
+   ↓
+MERGE / UPSERT
+   ↓
+curated final table
+
+# Because raw files can have:
+duplicate records
+updated records
+bad data
+missing values
+schema changes
+
+# So instead of loading directly into the final table, we load into:
+staging_salesforce_accounts
+
+# Then run:
+MERGE INTO salesforce_accounts
+USING staging_salesforce_accounts
+ON salesforce_accounts.account_id = staging_salesforce_accounts.account_id
+
+# Meaning:
+If account_id already exists → UPDATE it
+If account_id does not exist → INSERT it
+
+# This is called:
+UPSERT = UPDATE + INSERT
+
+Interview version:
+
+In production, I would not load Salesforce files directly into the final reporting table. 
+I would first load them into a staging table, validate and clean the data, 
+then use MERGE/UPSERT logic to update existing records and insert new records 
+into curated Redshift tables. This avoids duplicates and supports incremental Salesforce loads.
