@@ -124,7 +124,7 @@ def handler(event, context):
         statement_id = response["Id"]
 
         # Poll Redshift until query completes
-        for _ in range(10):
+        for _ in range(30):
             status = redshift_data.describe_statement(Id=statement_id)
             print(f"Statement status: {status['Status']}")
 
