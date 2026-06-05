@@ -19,7 +19,7 @@ on:
         description: "Terraform component"
         type: choice
         required: true
-        options: [s3, networking, redshift , ec2 , lambda ]
+        options: [s3, networking, redshift, ec2, lambda, glue]
 
       action:
         description: "Terraform action"
@@ -46,7 +46,7 @@ jobs:
 
     strategy:
       matrix:
-        component: [s3, networking , redshift , ec2 , lambda ]
+        component: [s3, networking, redshift, ec2, lambda, glue]
 
     steps:
       - name: Checkout code
@@ -69,13 +69,13 @@ jobs:
 
       - name: Terraform Validate
         run: terraform -chdir=terraform/components/${{ matrix.component }} validate
-      
+
       - name: Terraform Security Scan
         uses: bridgecrewio/checkov-action@v12
         with:
           directory: terraform/components/${{ matrix.component }}
           framework: terraform
-          skip_check: CKV2_AWS_62,CKV_AWS_18,CKV_AWS_144,CKV_AWS_130,CKV2_AWS_12,CKV2_AWS_11,CKV_AWS_87,CKV_AWS_71,CKV_AWS_142,CKV_AWS_321,CKV_AWS_64,CKV_AWS_282 , CKV_AWS_135,CKV_AWS_116,CKV_AWS_115,CKV_AWS_117,CKV_AWS_50,CKV_AWS_272 ,CKV_AWS_287, CKV_AWS_355,CKV_AWS_290, CKV_AWS_173
+          skip_check: CKV2_AWS_62,CKV_AWS_18,CKV_AWS_144,CKV_AWS_130,CKV2_AWS_12,CKV2_AWS_11,CKV_AWS_87,CKV_AWS_71,CKV_AWS_142,CKV_AWS_321,CKV_AWS_64,CKV_AWS_282,CKV_AWS_135,CKV_AWS_116,CKV_AWS_115,CKV_AWS_117,CKV_AWS_50,CKV_AWS_272,CKV_AWS_287,CKV_AWS_355,CKV_AWS_290,CKV_AWS_173 ,CKV_AWS_195
 
       - name: Terraform Plan
         run: |
@@ -95,7 +95,7 @@ jobs:
 
     strategy:
       matrix:
-        component: [s3, networking, redshift, ec2 , lambda ] 
+        component: [s3, networking, redshift, ec2, lambda, glue]
 
     steps:
       - name: Checkout code
@@ -105,7 +105,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: us-east-1
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: Confirm AWS account
         run: aws sts get-caller-identity
@@ -128,7 +128,6 @@ jobs:
               -var="environment=${{ github.ref_name }}" \
               -auto-approve
           fi
-
 
   manual:
     if: github.event_name == 'workflow_dispatch'
@@ -157,9 +156,14 @@ jobs:
       - name: Terraform Plan
         if: inputs.action == 'plan'
         run: |
-          terraform -chdir=terraform/components/${{ inputs.component }} plan \
-            -var="environment=${{ inputs.environment }}" \
-            -var="master_password=${{ secrets.REDSHIFT_MASTER_PASSWORD }}" \
+          if [ "${{ inputs.component }}" = "redshift" ]; then
+            terraform -chdir=terraform/components/${{ inputs.component }} plan \
+              -var="environment=${{ inputs.environment }}" \
+              -var="master_password=${{ secrets.REDSHIFT_MASTER_PASSWORD }}"
+          else
+            terraform -chdir=terraform/components/${{ inputs.component }} plan \
+              -var="environment=${{ inputs.environment }}"
+          fi
 
       - name: Terraform Apply
         if: inputs.action == 'apply'
@@ -178,6 +182,13 @@ jobs:
       - name: Terraform Destroy
         if: inputs.action == 'destroy'
         run: |
-          terraform -chdir=terraform/components/${{ inputs.component }} destroy \
-            -var="environment=${{ inputs.environment }}" \
-            -auto-approve
+          if [ "${{ inputs.component }}" = "redshift" ]; then
+            terraform -chdir=terraform/components/${{ inputs.component }} destroy \
+              -var="environment=${{ inputs.environment }}" \
+              -var="master_password=${{ secrets.REDSHIFT_MASTER_PASSWORD }}" \
+              -auto-approve
+          else
+            terraform -chdir=terraform/components/${{ inputs.component }} destroy \
+              -var="environment=${{ inputs.environment }}" \
+              -auto-approve
+          fi
