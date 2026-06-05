@@ -50,7 +50,7 @@ def handler(event, context):
         if "accounts" in key:
             table_name = "staging_salesforce_accounts"
         elif "opportunities" in key:
-            table_name = "salesforce_opportunities"
+            table_name = "staging_salesforce_opportunities"
         else:
             # Ignore unsupported files
             print(f"Skipping unknown file type: {key}")
@@ -99,6 +99,39 @@ def handler(event, context):
             );
 
             TRUNCATE TABLE staging_salesforce_accounts;
+            """
+        elif table_name == "staging_salesforce_opportunities":
+            sql = f"""
+            COPY staging_salesforce_opportunities
+            FROM '{s3_path}'
+            IAM_ROLE '{ROLE_ARN}'
+            CSV
+            IGNOREHEADER 1;
+
+            MERGE INTO salesforce_opportunities
+            USING staging_salesforce_opportunities
+            ON salesforce_opportunities.opportunity_id = staging_salesforce_opportunities.opportunity_id
+            WHEN MATCHED THEN UPDATE SET
+                account_id = staging_salesforce_opportunities.account_id,
+                opportunity_name = staging_salesforce_opportunities.opportunity_name,
+                stage = staging_salesforce_opportunities.stage,
+                amount = staging_salesforce_opportunities.amount
+            WHEN NOT MATCHED THEN INSERT (
+                opportunity_id,
+                account_id,
+                opportunity_name,
+                stage,
+                amount
+            )
+            VALUES (
+                staging_salesforce_opportunities.opportunity_id,
+                staging_salesforce_opportunities.account_id,
+                staging_salesforce_opportunities.opportunity_name,
+                staging_salesforce_opportunities.stage,
+                staging_salesforce_opportunities.amount
+            );
+
+            TRUNCATE TABLE staging_salesforce_opportunities;
             """
         else:
             sql = f"""
