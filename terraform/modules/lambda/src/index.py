@@ -72,8 +72,41 @@ def handler(event, context):
             CSV
             IGNOREHEADER 1;
 
+            INSERT INTO salesforce_accounts_errors (
+                account_id,
+                account_name,
+                industry,
+                city,
+                state,
+                annual_revenue,
+                error_reason
+            )
+            SELECT
+                account_id,
+                account_name,
+                industry,
+                city,
+                state,
+                annual_revenue,
+                CASE
+                    WHEN account_id IS NULL THEN 'Missing account_id'
+                    WHEN account_name IS NULL THEN 'Missing account_name'
+                    WHEN annual_revenue < 0 THEN 'Negative annual_revenue'
+                    ELSE 'Unknown error'
+                END
+            FROM staging_salesforce_accounts
+            WHERE account_id IS NULL
+            OR account_name IS NULL
+            OR annual_revenue < 0;
+
             MERGE INTO salesforce_accounts
-            USING staging_salesforce_accounts
+            USING (
+                SELECT *
+                FROM staging_salesforce_accounts
+                WHERE account_id IS NOT NULL
+                AND account_name IS NOT NULL
+                AND annual_revenue >= 0
+            ) staging_salesforce_accounts
             ON salesforce_accounts.account_id = staging_salesforce_accounts.account_id
             WHEN MATCHED THEN UPDATE SET
                 account_name = staging_salesforce_accounts.account_name,
