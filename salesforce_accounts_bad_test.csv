@@ -1,0 +1,4 @@
+account_id,account_name,industry,city,state,annual_revenue
+A006,Valid Test Hotel,Hospitality,Dallas,TX,15000000
+A007,,Hospitality,Austin,TX,12000000
+A008,Bad Revenue Hotel,Hospitality,Houston,TX,-5000

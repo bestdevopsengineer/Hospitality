@@ -89,14 +89,16 @@ def handler(event, context):
                 state,
                 annual_revenue,
                 CASE
-                    WHEN account_id IS NULL THEN 'Missing account_id'
-                    WHEN account_name IS NULL THEN 'Missing account_name'
+                    WHEN account_id IS NULL OR TRIM(account_id) = '' THEN 'Missing account_id'
+                    WHEN account_name IS NULL OR TRIM(account_name) = '' THEN 'Missing account_name'
                     WHEN annual_revenue < 0 THEN 'Negative annual_revenue'
                     ELSE 'Unknown error'
                 END
             FROM staging_salesforce_accounts
             WHERE account_id IS NULL
+            OR TRIM(account_id) = ''
             OR account_name IS NULL
+            OR TRIM(account_name) = ''
             OR annual_revenue < 0;
 
             MERGE INTO salesforce_accounts
