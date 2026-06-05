@@ -330,3 +330,18 @@ Clean up temporary data
       ▼
 📈 Analysts / BI Tools
 Power BI, Tableau, Looker query Redshift
+
+⭐ All the Ways to Move Salesforce → S3 (Ranked by Use Case)
+
+⭐ 1️⃣ AppFlow — Fully managed, easiest, no code
+
+⭐ 2️⃣ Lambda + Salesforce API — Most flexible
+You write Lambda code to call:
+Salesforce Bulk API (best for large datasets)
+Salesforce REST API
+Salesforce SOAP API
+
+⭐ 3️⃣ Salesforce → EventBridge — Real‑time events
+
+⭐ 4️⃣ MuleSoft — Enterprise integration platform
+
