@@ -34,5 +34,11 @@ MSYS_NO_PATHCONV=1 aws logs tail /aws/lambda/dev-s3-redshift-loader \
  # Look for:
   Statement status: FINISHED
 
-SELECT COUNT(*)
+==========
+aws ssm start-session   --target i-03866a693e0b236b9   --region us-east-1
+
+==========
+PGPASSWORD='UseSomethingStrong123!' psql   -h dev-hospitality-workgroup.502845302465.us-east-1.redshift-serverless.amazonaws.com   -p 5439   -U adminuser   -d hospitality
+===========
+SELECT *
 FROM salesforce_accounts;
