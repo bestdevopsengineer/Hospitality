@@ -106,7 +106,9 @@ def handler(event, context):
                 SELECT *
                 FROM staging_salesforce_accounts
                 WHERE account_id IS NOT NULL
+                AND TRIM(account_id) <> ''
                 AND account_name IS NOT NULL
+                AND TRIM(account_name) <> ''
                 AND annual_revenue >= 0
             ) staging_salesforce_accounts
             ON salesforce_accounts.account_id = staging_salesforce_accounts.account_id
