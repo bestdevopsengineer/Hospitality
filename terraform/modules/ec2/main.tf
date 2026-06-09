@@ -14,6 +14,13 @@ resource "aws_instance" "jump_server" {
   subnet_id            = var.subnet_id
   iam_instance_profile = aws_iam_instance_profile.ssm.name
 
+  user_data = <<-EOF
+    #!/bin/bash
+    dnf install -y amazon-ssm-agent
+    systemctl enable amazon-ssm-agent
+    systemctl start amazon-ssm-agent
+  EOF
+  
   monitoring = true
 
   metadata_options {
